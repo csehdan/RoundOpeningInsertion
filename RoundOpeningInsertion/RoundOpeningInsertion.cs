@@ -17,15 +17,15 @@ namespace RoundOpeningInsertion
         private readonly string familyName = "M_Round Face Opening";
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            UIApplication uiapp = commandData.Application;
-            Document doc = uiapp.ActiveUIDocument.Document;
-            Family family = FindOrLoadFamily(doc);
+            var uiapp = commandData.Application;
+            var doc = uiapp.ActiveUIDocument.Document;
+            var family = FindOrLoadFamily(doc);
 
             if(family == null)
             {
                 return Result.Failed;
             }
-            FamilySymbol familySymbol = GetFamilySymbol(family);
+            var familySymbol = GetFamilySymbol(family);
 
             if(familySymbol == null)
             {
@@ -34,7 +34,7 @@ namespace RoundOpeningInsertion
 
             if (!familySymbol.IsActive)
             {
-                using (Transaction tx = new Transaction(doc))
+                using (var tx = new Transaction(doc))
                 {
                     tx.Start("Activate family symbol");
                     familySymbol.Activate();
@@ -42,33 +42,32 @@ namespace RoundOpeningInsertion
                 }
             }
 
-            FilteredElementCollector walls = new FilteredElementCollector(doc).OfClass(typeof(Wall));
-            using (Transaction t = new Transaction(doc, "Duct Wall Intersection"))
+            var walls = new FilteredElementCollector(doc).OfClass(typeof(Wall));
+            using (var t = new Transaction(doc, "Duct Wall Intersection"))
             {
                 t.Start();
 
                 foreach (Wall wall in walls)
                 {
-                    BoundingBoxXYZ bounding = wall.get_BoundingBox(null);
-                    Outline outline = new Outline(bounding.Min, bounding.Max);
-                    BoundingBoxIntersectsFilter bbfilter = new BoundingBoxIntersectsFilter(outline);
-                    FilteredElementCollector ducts = new FilteredElementCollector(doc).OfClass(typeof(Duct));
-                    List<Duct> intersectedDucts = ducts.WherePasses(bbfilter).Cast<Duct>().ToList();
+                    var bounding = wall.get_BoundingBox(null);
+                    var outline = new Outline(bounding.Min, bounding.Max);
+                    var bbfilter = new BoundingBoxIntersectsFilter(outline);
+                    var ducts = new FilteredElementCollector(doc).OfClass(typeof(Duct));
+                    var intersectedDucts = ducts.WherePasses(bbfilter).Cast<Duct>().ToList();
 
                     if (intersectedDucts.Count > 0)
                     {
-                        List<Face> wallFaces = FindWallFace(wall);
+                        var wallFaces = FindWallFace(wall);
 
                         if (wallFaces.Count == 2)
                         {
-                            foreach (Duct duct in intersectedDucts)
+                            foreach (var duct in intersectedDucts)
                             {
-
-                                Curve ductCurve = FindDuctCurve(duct);
-                                Face face = wallFaces[0];
-                                XYZ frontIntersection = FindIntersection(ductCurve, face);
-                                XYZ backIntersection = FindIntersection(ductCurve, wallFaces[1]);
-                                XYZ frontRefDir = GetRefDir(face);
+                                var ductCurve = FindDuctCurve(duct);
+                                var face = wallFaces[0];
+                                var frontIntersection = FindIntersection(ductCurve, face);
+                                var backIntersection = FindIntersection(ductCurve, wallFaces[1]);
+                                var frontRefDir = GetRefDir(face);
                                 XYZ intersection = null;
                                 double verticalDiff = 0;
                                 verticalDiff = frontIntersection.Z - backIntersection.Z;
@@ -85,8 +84,8 @@ namespace RoundOpeningInsertion
                                     intersection = new XYZ(frontIntersection.X - (horizontalDiff / 2), frontIntersection.Y , frontIntersection.Z - (verticalDiff / 2));
                                 }
 
-                                FamilyInstance instance = doc.Create.NewFamilyInstance(face, intersection, frontRefDir, familySymbol);
-                                Element inserted = doc.GetElement(instance.Id);
+                                var instance = doc.Create.NewFamilyInstance(face, intersection, frontRefDir, familySymbol);
+                                var inserted = doc.GetElement(instance.Id);
                                 var depth = inserted.GetParameters("Depth").First();
                                 depth.Set(wall.Width);
                                 var D = inserted.GetParameters("D").First();
@@ -116,17 +115,17 @@ namespace RoundOpeningInsertion
 
         private XYZ GetRefDir(Face face)
         {
-            BoundingBoxUV bboxUV = face.GetBoundingBox();
-            UV center = (bboxUV.Max + bboxUV.Min) / 2.0;
-            XYZ location = face.Evaluate(center);
-            XYZ normal = face.ComputeNormal(center);
+            var bboxUV = face.GetBoundingBox();
+            var center = (bboxUV.Max + bboxUV.Min) / 2.0;
+            var location = face.Evaluate(center);
+            var normal = face.ComputeNormal(center);
             return normal.CrossProduct(XYZ.BasisZ);
 
         }
 
         private XYZ FindIntersection(Curve ductCurve, Face face)
         {
-            IntersectionResultArray intersectionR = new IntersectionResultArray();
+            var intersectionR = new IntersectionResultArray();
 
             SetComparisonResult results;
 
@@ -149,7 +148,7 @@ namespace RoundOpeningInsertion
 
         private Curve FindDuctCurve(Duct duct)
         {
-            IList<XYZ> list = new List<XYZ>();
+            var list = new List<XYZ>();
 
             ConnectorSetIterator csi = duct.ConnectorManager.Connectors.ForwardIterator();
             while (csi.MoveNext())
@@ -157,7 +156,7 @@ namespace RoundOpeningInsertion
                 Connector conn = csi.Current as Connector;
                 list.Add(conn.Origin);
             }
-            Curve curve = Line.CreateBound(list.ElementAt(0), list.ElementAt(1)) as Curve;
+            var curve = Line.CreateBound(list.ElementAt(0), list.ElementAt(1)) as Curve;
             curve.MakeUnbound();
 
             return curve;
@@ -165,23 +164,23 @@ namespace RoundOpeningInsertion
 
         private List<Face> FindWallFace(Wall wall)
         {
-            List<Face> normalFaces = new List<Face>();
+            var normalFaces = new List<Face>();
 
-            Options opt = new Options();
+            var opt = new Options();
             opt.ComputeReferences = true;
             opt.DetailLevel = ViewDetailLevel.Fine;
 
-            GeometryElement e = wall.get_Geometry(opt);
+            var e = wall.get_Geometry(opt);
 
             foreach (GeometryObject obj in e)
             {
-                Solid solid = obj as Solid;
+                var solid = obj as Solid;
 
                 if (solid != null && solid.Faces.Size > 0)
                 {
                     foreach (Face face in solid.Faces)
                     {
-                        PlanarFace pf = face as PlanarFace;
+                        var pf = face as PlanarFace;
                         if (pf != null)
                         {
                             if ((int)pf.FaceNormal.Z == 0)
@@ -200,7 +199,7 @@ namespace RoundOpeningInsertion
 
         private FamilySymbol GetFamilySymbol(Family family)
         {
-            ElementId elementId = family.GetFamilySymbolIds().FirstOrDefault();
+            var elementId = family.GetFamilySymbolIds().FirstOrDefault();
 
             if(elementId == null)
             {
@@ -215,14 +214,14 @@ namespace RoundOpeningInsertion
 
         private Family FindOrLoadFamily(Document doc)
         {
-            FilteredElementCollector a = new FilteredElementCollector(doc).OfClass(typeof(Family));
-            Family family = a.FirstOrDefault(e => e.Name.Equals(familyName)) as Family;
+            var a = new FilteredElementCollector(doc).OfClass(typeof(Family));
+            var family = a.FirstOrDefault(e => e.Name.Equals(familyName)) as Family;
 
             if (null == family)
             {
-                string workingDirectory = Environment.CurrentDirectory;
-                string projectDirectory = Directory.GetParent(workingDirectory).Parent.FullName;
-                string FamilyPath = Path.Combine(projectDirectory, familyName + ".rfa");
+                var workingDirectory = Environment.CurrentDirectory;
+                var projectDirectory = Directory.GetParent(workingDirectory).Parent.FullName;
+                var FamilyPath = Path.Combine(projectDirectory, familyName + ".rfa");
 
                 if (!File.Exists(FamilyPath))
                 {
