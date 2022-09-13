@@ -75,9 +75,8 @@ namespace RoundOpeningInsertion
 
                                 var frontRefDir = GetRefDir(face);
                                 XYZ intersection = null;
-                                double verticalDiff = 0;
-                                verticalDiff = frontIntersection.Z - backIntersection.Z;
-                                double horizontalDiff = 0;
+                                var verticalDiff = frontIntersection.Z - backIntersection.Z;
+                                var horizontalDiff = 0d;
 
                                 if(Math.Abs(frontRefDir.Y) > Math.Abs(frontRefDir.X))
                                 {
@@ -108,12 +107,12 @@ namespace RoundOpeningInsertion
 
         private double GetDiameter(double horizontalDiff, double verticalDiff, double width, double diameter)
         {
-            double diff = Math.Sqrt(verticalDiff * verticalDiff + horizontalDiff * horizontalDiff);
+            var diff = Math.Sqrt(verticalDiff * verticalDiff + horizontalDiff * horizontalDiff);
             if(diff > 0)
             {
-                double coff = diff / width;
-                double edge = diameter * coff;
-                double newDiameter = Math.Sqrt(diameter * diameter + edge * edge);
+                var coff = diff / width;
+                var edge = diameter * coff;
+                var newDiameter = Math.Sqrt(diameter * diameter + edge * edge);
                 return newDiameter + diff;
             }
             return diameter;
@@ -122,20 +121,14 @@ namespace RoundOpeningInsertion
         private XYZ GetRefDir(Face face)
         {
             var bboxUV = face.GetBoundingBox();
-            var center = (bboxUV.Max + bboxUV.Min) / 2.0;
-            var location = face.Evaluate(center);
+            var center = (bboxUV.Max + bboxUV.Min) / 2d;
             var normal = face.ComputeNormal(center);
             return normal.CrossProduct(XYZ.BasisZ);
-
         }
 
         private XYZ FindIntersection(Curve ductCurve, Face face)
         {
-            var intersectionR = new IntersectionResultArray();
-
-            SetComparisonResult results;
-
-            results = face.Intersect(ductCurve, out intersectionR);
+            var results = face.Intersect(ductCurve, out var intersectionR);
 
             XYZ intersectionResult = null;
 
@@ -156,10 +149,10 @@ namespace RoundOpeningInsertion
         {
             var list = new List<XYZ>();
 
-            ConnectorSetIterator csi = duct.ConnectorManager.Connectors.ForwardIterator();
+            var csi = duct.ConnectorManager.Connectors.ForwardIterator();
             while (csi.MoveNext())
             {
-                Connector conn = csi.Current as Connector;
+                var conn = csi.Current as Connector;
                 list.Add(conn.Origin);
             }
             var curve = Line.CreateBound(list.ElementAt(0), list.ElementAt(1)) as Curve;
@@ -187,15 +180,16 @@ namespace RoundOpeningInsertion
                     foreach (Face face in solid.Faces)
                     {
                         var pf = face as PlanarFace;
-                        if (pf != null)
+
+                        if (pf == null)
                         {
-                            if ((int)pf.FaceNormal.Z == 0)
-                            {
-                                if (Math.Abs(wall.Orientation.X) == Math.Abs(pf.FaceNormal.X) || Math.Abs(wall.Orientation.Y) == Math.Abs(pf.FaceNormal.Y))
-                                {
-                                    normalFaces.Add(pf);
-                                }
-                            }
+                            continue;
+                        }
+
+                        if ((int)pf.FaceNormal.Z == 0
+                            && (Math.Abs(wall.Orientation.X) == Math.Abs(pf.FaceNormal.X) || Math.Abs(wall.Orientation.Y) == Math.Abs(pf.FaceNormal.Y)))
+                        {
+                            normalFaces.Add(pf);
                         }
                     }
                 }
@@ -223,7 +217,7 @@ namespace RoundOpeningInsertion
             var a = new FilteredElementCollector(doc).OfClass(typeof(Family));
             var family = a.FirstOrDefault(e => e.Name.Equals(familyName)) as Family;
 
-            if (null == family)
+            if (family == null)
             {
                 var workingDirectory = Environment.CurrentDirectory;
                 var projectDirectory = Directory.GetParent(workingDirectory).Parent.FullName;
