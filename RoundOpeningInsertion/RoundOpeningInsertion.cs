@@ -67,6 +67,12 @@ namespace RoundOpeningInsertion
                                 var face = wallFaces[0];
                                 var frontIntersection = FindIntersection(ductCurve, face);
                                 var backIntersection = FindIntersection(ductCurve, wallFaces[1]);
+
+                                if (frontIntersection is null || backIntersection is null)
+                                {
+                                    continue;
+                                }
+
                                 var frontRefDir = GetRefDir(face);
                                 XYZ intersection = null;
                                 double verticalDiff = 0;
