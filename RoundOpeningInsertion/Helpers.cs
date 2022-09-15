@@ -76,6 +76,7 @@ namespace RoundOpeningInsertion
 
             return family;
         }
+
         public static FamilySymbol ResolveFamilySymbol(Family family, Document doc)
         {
             var familySymbol = GetFamilySymbol(family);
