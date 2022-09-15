@@ -47,8 +47,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FamilyLoader.cs" />
+    <Compile Include="FamilySymbolResolver.cs" />
     <Compile Include="RoundOpeningInsertion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
