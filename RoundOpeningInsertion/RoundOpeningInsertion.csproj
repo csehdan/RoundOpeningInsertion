@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IAutoCreateObjects.cs" />
     <Compile Include="RoundOpeningCreator.cs" />
     <Compile Include="RoundOpeningInsertion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

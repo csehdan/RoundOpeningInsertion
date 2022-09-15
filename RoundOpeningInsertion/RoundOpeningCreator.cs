@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace RoundOpeningInsertion
 {
-	public class RoundOpeningCreator
-	{
+	public class RoundOpeningCreator : IAutoCreateObjects
+    {
 		private readonly string _familyName = "M_Round Face Opening";
-		private UIApplication _uiapp;
-		private Document _doc;
-		private Family _family;
-		private FamilySymbol _familySymbol;
+		readonly private UIApplication _uiapp;
+		private readonly Document _doc;
+		private readonly Family _family;
+		private readonly FamilySymbol _familySymbol;
 
 		public RoundOpeningCreator(ExternalCommandData commandData)
 		{
@@ -22,7 +22,7 @@ namespace RoundOpeningInsertion
 			_familySymbol = Helpers.ResolveFamilySymbol(_family, _doc);
 		}
 
-		public Result CreateRoundOpenings()
+		public Result AutoCreateObjects()
 		{
             var walls = new FilteredElementCollector(_doc).OfClass(typeof(Wall));
             using (var t = new Transaction(_doc, "Duct Wall Intersection"))
