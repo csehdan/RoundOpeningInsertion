@@ -7,7 +7,7 @@ namespace RoundOpeningInsertion
 	[Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
 
-    public class RoundOpeningInsertion : IExternalCommand
+    public class RoundOpeningInsertion : StartUp, IExternalCommand
     {
         private IAutoCreateObjects autoCreateObjects;
 
